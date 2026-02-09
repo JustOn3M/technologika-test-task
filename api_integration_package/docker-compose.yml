@@ -1,0 +1,46 @@
+services:
+  takeoff:
+    image: python:3.11-slim
+    container_name: takeoff-service
+    working_dir: /app
+    volumes:
+      - ./takeoff_service:/app
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "pip install --no-cache-dir -r requirements.txt &&
+             python main.py"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - integration-network
+
+  estimator:
+    image: python:3.11-slim
+    container_name: estimator-service
+    working_dir: /app
+    volumes:
+      - ./estimator_service:/app
+    ports:
+      - "8001:8001"
+    environment:
+      - TAKEOFF_SERVICE_URL=http://takeoff:8000
+    depends_on:
+      - takeoff
+    command: >
+      sh -c "pip install --no-cache-dir -r requirements.txt &&
+             python main.py"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - integration-network
+
+networks:
+  integration-network:
+    driver: bridge

@@ -1,0 +1,25 @@
+sequenceDiagram
+    participant User
+    participant TakeoffUI as Takeoff UI
+    participant Takeoff as Takeoff Service
+    participant Estimator as Estimator Service
+
+    User->>TakeoffUI: Create/Update/Delete Condition or Item
+    TakeoffUI->>Takeoff: Save changes
+    Takeoff-->>TakeoffUI: Confirm saved
+
+    Note over Takeoff,Estimator: Webhook notification (lightweight)
+    Takeoff->>Estimator: POST /api/Conditions/PostConditionsChange
+    Note right of Takeoff: Payload: documentId, pageNumber, actions[]
+    Estimator->>Estimator: Log received changes
+    Estimator-->>Takeoff: 200 OK
+
+    Note over Estimator,Takeoff: Pull complete state
+    Estimator->>Takeoff: GET /api/Conditions/GetAllConditionsState?documentId=X&pageNumber=Y
+    Takeoff-->>Estimator: PageConditionsState (full hierarchy)
+
+    Note over Estimator: Apply pricing rules
+    Estimator->>Estimator: Recalculate cost estimate
+    Estimator->>Estimator: Log new estimate to console
+
+    Note over Estimator: Result available for UI/reporting

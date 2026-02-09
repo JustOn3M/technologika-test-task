@@ -1,0 +1,134 @@
+{
+  "documentId": "550e8400-e29b-41d4-a716-446655440000",
+  "pageNumber": 1,
+  "actions": [
+    {
+      "orderNumber": 1,
+      "actionName": "Create",
+      "entityType": "TakeoffZone",
+      "takeoffZone": {
+        "id": "a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d",
+        "name": "Floor Plan - Scale 1:100",
+        "scale": 100.0,
+        "dpi": 300,
+        "boundingBox": {
+          "left": 50.0,
+          "top": 50.0,
+          "right": 800.0,
+          "bottom": 600.0
+        }
+      }
+    },
+    {
+      "orderNumber": 2,
+      "actionName": "Create",
+      "entityType": "Condition",
+      "condition": {
+        "id": "f1e2d3c4-b5a6-4c5d-8e9f-0a1b2c3d4e5f",
+        "name": "Standard Window 1200x1500",
+        "type": "Count",
+        "shape": "Window",
+        "category": "Windows",
+        "description": "Standard double-glazed window",
+        "layer": "ARCH-WINDOW",
+        "color": "#3498db",
+        "lineStyle": "Solid",
+        "fillPattern": "Diagonal",
+        "isAttachment": false,
+        "quantities": [
+          {
+            "name": "Count",
+            "unitOfMeasure": "EA",
+            "excludeAttachments": false
+          },
+          {
+            "name": "Area",
+            "unitOfMeasure": "SQ.M",
+            "excludeAttachments": false
+          }
+        ],
+        "properties": [
+          {"name": "Width", "value": "1200"},
+          {"name": "Height", "value": "1500"},
+          {"name": "Material", "value": "PVC"}
+        ],
+        "customAttributes": [
+          {"name": "EnergyRating", "value": "A+"},
+          {"name": "Supplier", "value": "WindowCorp Ltd"}
+        ]
+      }
+    },
+    {
+      "orderNumber": 3,
+      "actionName": "Create",
+      "entityType": "TakeoffItem",
+      "takeoffItem": {
+        "id": "b2c3d4e5-f6a7-4b5c-8d9e-0f1a2b3c4d5e",
+        "conditionId": "f1e2d3c4-b5a6-4c5d-8e9f-0a1b2c3d4e5f",
+        "takeoffZoneId": "a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d",
+        "parentTakeoffItemId": null,
+        "itemName": "Window #1 - Living Room",
+        "angle": 0.0,
+        "points": [
+          {"x": 150.5, "y": 200.3},
+          {"x": 180.5, "y": 200.3},
+          {"x": 180.5, "y": 237.8},
+          {"x": 150.5, "y": 237.8}
+        ],
+        "quantityValues": [
+          {"name": "Count", "unitOfMeasure": "EA", "value": 1.0},
+          {"name": "Area", "unitOfMeasure": "SQ.M", "value": 1.8}
+        ]
+      }
+    },
+    {
+      "orderNumber": 4,
+      "actionName": "Update",
+      "entityType": "Condition",
+      "condition": {
+        "id": "f1e2d3c4-b5a6-4c5d-8e9f-0a1b2c3d4e5f",
+        "name": "Standard Window 1200x1500 (Updated)",
+        "type": "Count",
+        "shape": "Window",
+        "category": "Windows",
+        "description": "Updated: Now includes energy-efficient glass",
+        "layer": "ARCH-WINDOW",
+        "color": "#2ecc71",
+        "lineStyle": "Solid",
+        "fillPattern": "Diagonal",
+        "isAttachment": false,
+        "quantities": [
+          {
+            "name": "Count",
+            "unitOfMeasure": "EA",
+            "excludeAttachments": false
+          }
+        ],
+        "properties": [
+          {"name": "Width", "value": "1200"},
+          {"name": "Height", "value": "1500"},
+          {"name": "Material", "value": "PVC with Low-E coating"}
+        ],
+        "customAttributes": [
+          {"name": "EnergyRating", "value": "A++"}
+        ]
+      }
+    },
+    {
+      "orderNumber": 5,
+      "actionName": "Delete",
+      "entityType": "TakeoffItem",
+      "deleteTakeoffItem": {
+        "id": "c3d4e5f6-a7b8-4c5d-8e9f-0a1b2c3d4e5f"
+      }
+    },
+    {
+      "orderNumber": 6,
+      "actionName": "Delete",
+      "entityType": "Condition",
+      "deleteCondition": {
+        "id": "d4e5f6a7-b8c9-4d5e-8f9a-0b1c2d3e4f5a"
+      }
+    }
+  ]
+}

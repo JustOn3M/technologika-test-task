@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Диаграмма Ганта - Output Formatting Features</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            padding: 30px 40px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+            background: #ecf0f1;
+        }
+        
+        .metric {
+            padding: 25px;
+            text-align: center;
+            border-right: 1px solid #bdc3c7;
+        }
+        
+        .metric:last-child {
+            border-right: none;
+        }
+        
+        .metric-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .metric-label {
+            font-size: 13px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .critical-highlight {
+            background: linear-gradient(135deg, #ffe6e6 0%, #ffd6d6 100%);
+            border: 2px solid #e74c3c;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .critical-highlight h3 {
+            color: #c0392b;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .critical-highlight p {
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .gantt-section {
+            margin-top: 30px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #3498db;
+        }
+        
+        .timeline-header {
+            display: flex;
+            margin-left: 320px;
+            margin-bottom: 5px;
+            position: relative;
+            height: 30px;
+        }
+        
+        .timeline-marker {
+            position: absolute;
+            font-size: 11px;
+            color: #7f8c8d;
+            font-weight: 600;
+            transform: translateX(-50%);
+        }
+        
+        .timeline-tick {
+            position: absolute;
+            width: 1px;
+            height: 10px;
+            background: #bdc3c7;
+            transform: translateX(-50%);
+            top: 15px;
+        }
+        
+        .gantt-group {
+            margin-bottom: 30px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .group-header {
+            background: #34495e;
+            color: white;
+            padding: 12px 20px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .group-header.critical {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+        
+        .group-header.saveas {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+        }
+        
+        .group-header.other {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+        
+        .group-duration {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .gantt-row {
+            display: flex;
+            align-items: stretch;
+            border-bottom: 1px solid #ecf0f1;
+            min-height: 50px;
+            background: white;
+            transition: background 0.2s;
+        }
+        
+        .gantt-row:hover {
+            background: #f8f9fa;
+        }
+        
+        .gantt-row:last-child {
+            border-bottom: none;
+        }
+        
+        .task-info {
+            width: 320px;
+            padding: 12px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-right: 2px solid #ecf0f1;
+        }
+        
+        .task-id {
+            font-size: 12px;
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 4px;
+        }
+        
+        .task-name {
+            font-size: 14px;
+            color: #2c3e50;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .task-meta {
+            font-size: 11px;
+            color: #7f8c8d;
+        }
+        
+        .task-dependency {
+            font-size: 11px;
+            color: #95a5a6;
+            font-style: italic;
+        }
+        
+        .timeline-container {
+            flex: 1;
+            position: relative;
+            padding: 8px 0;
+        }
+        
+        .timeline-bg {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+        }
+        
+        .timeline-segment {
+            flex: 1;
+            border-right: 1px solid #f0f0f0;
+        }
+        
+        .task-bars {
+            position: relative;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+        
+        .task-bar {
+            position: absolute;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.2s;
+            overflow: hidden;
+        }
+        
+        .task-bar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+        
+        .task-bar.critical {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+        
+        .task-bar.frontend {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            top: 4px;
+        }
+        
+        .task-bar.backend {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            top: 20px;
+        }
+        
+        .task-bar.full {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .task-bar.blocked {
+            background: #95a5a6;
+            opacity: 0.5;
+        }
+        
+        .legend {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        
+        .legend-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #2c3e50;
+        }
+        
+        .legend-items {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+        
+        .legend-box {
+            width: 30px;
+            height: 18px;
+            border-radius: 3px;
+        }
+        
+        .next-steps {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+        
+        .next-steps-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #155724;
+            margin-bottom: 15px;
+        }
+        
+        .steps-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .step {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #28a745;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .step-number {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            background: #28a745;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .step-text {
+            color: #2c3e50;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Диаграмма Ганта: Output Formatting Features</h1>
+            <p>Визуализация параллельности задач и критического пути</p>
+        </div>
+        
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-value">198ч</div>
+                <div class="metric-label">Общая трудоемкость</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">66ч</div>
+                <div class="metric-label">Критический путь</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">84ч</div>
+                <div class="metric-label">С параллелизмом</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">~11д</div>
+                <div class="metric-label">Срок завершения</div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="critical-highlight">
+                <h3>🔴 Критический путь определяет минимальный срок проекта</h3>
+                <p>T4 → T5 → T6 → T7 → T8 = 66 часов</p>
+            </div>
+            
+            <div class="gantt-section">
+                <div class="section-title">График выполнения задач (0-84 часа)</div>
+                
+                <!-- Timeline Header -->
+                <div class="timeline-header">
+                    <div class="timeline-marker" style="left: 0%;">0ч</div>
+                    <div class="timeline-tick" style="left: 0%;"></div>
+                    
+                    <div class="timeline-marker" style="left: 14.29%;">12ч</div>
+                    <div class="timeline-tick" style="left: 14.29%;"></div>
+                    
+                    <div class="timeline-marker" style="left: 28.57%;">24ч</div>
+                    <div class="timeline-tick" style="left: 28.57%;"></div>
+                    
+                    <div class="timeline-marker" style="left: 42.86%;">36ч</div>
+                    <div class="timeline-tick" style="left: 42.86%;"></div>
+                    
+                    <div class="timeline-marker" style="left: 57.14%;">48ч</div>
+                    <div class="timeline-tick" style="left: 57.14%;"></div>
+                    
+                    <div class="timeline-marker" style="left: 71.43%;">60ч</div>
+                    <div class="timeline-tick" style="left: 71.43%;"></div>
+                    
+                    <div class="timeline-marker" style="left: 85.71%;">72ч</div>
+                    <div class="timeline-tick" style="left: 85.71%;"></div>
+                    
+                    <div class="timeline-marker" style="left: 100%;">84ч</div>
+                    <div class="timeline-tick" style="left: 100%;"></div>
+                </div>
+                
+                <!-- КРИТИЧЕСКИЙ ПУТЬ -->
+                <div class="gantt-group">
+                    <div class="group-header critical">
+                        <span>🔴 КРИТИЧЕСКИЙ ПУТЬ (CAD/GIS экспорт - Backend)</span>
+                        <span class="group-duration">66 часов</span>
+                    </div>
+                    
+                    <!-- T4 -->
+                    <div class="gantt-row">
+                        <div class="task-info">
+                            <div class="task-id">T4</div>
+                            <div class="task-name">CAD export formats</div>
+                            <div class="task-meta">Backend 6ч</div>
+                            <div class="task-dependency">Независимая</div>
+                        </div>
+                        <div class="timeline-container">
+                            <div class="timeline-bg">
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                            </div>
+                            <div class="task-bars">
+                                <div class="task-bar critical" style="left: 0%; width: 7.14%;" title="T4: 0-6ч">6ч</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- T5 -->
+                    <div class="gantt-row">
+                        <div class="task-info">
+                            <div class="task-id">T5</div>
+                            <div class="task-name">Revit-optimized DWG export</div>
+                            <div class="task-meta">Backend 12ч</div>
+                            <div class="task-dependency">Зависит от: T4</div>
+                        </div>
+                        <div class="timeline-container">
+                            <div class="timeline-bg">
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                            </div>
+                            <div class="task-bars">
+                                <div class="task-bar critical" style="left: 7.14%; width: 14.29%;" title="T5: 6-18ч">12ч</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- T6 -->
+                    <div class="gantt-row">
+                        <div class="task-info">
+                            <div class="task-id">T6</div>
+                            <div class="task-name">GIS export formats</div>
+                            <div class="task-meta">Backend 24ч</div>
+                            <div class="task-dependency">Зависит от: T5</div>
+                        </div>
+                        <div class="timeline-container">
+                            <div class="timeline-bg">
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                            </div>
+                            <div class="task-bars">
+                                <div class="task-bar critical" style="left: 21.43%; width: 28.57%;" title="T6: 18-42ч">24ч</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- T7 -->
+                    <div class="gantt-row">
+                        <div class="task-info">
+                            <div class="task-id">T7</div>
+                            <div class="task-name">ALTA/NSPS compliance</div>
+                            <div class="task-meta">Backend 18ч</div>
+                            <div class="task-dependency">Зависит от: T4, T5, T6</div>
+                        </div>
+                        <div class="timeline-container">
+                            <div class="timeline-bg">
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                            </div>
+                            <div class="task-bars">
+                                <div class="task-bar critical" style="left: 50%; width: 21.43%;" title="T7: 42-60ч">18ч</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- T8 -->
+                    <div class="gantt-row">
+                        <div class="task-info">
+                            <div class="task-id">T8</div>
+                            <div class="task-name">Color and B&W toggle</div>
+                            <div class="task-meta">Frontend 6ч + Backend 6ч (параллельно)</div>
+                            <div class="task-dependency">Зависит от: T4, T5, T6</div>
+                        </div>
+                        <div class="timeline-container">
+                            <div class="timeline-bg">
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                            </div>
+                            <div class="task-bars">
+                                <div class="task-bar critical frontend" style="left: 71.43%; width: 7.14%;" title="T8 FE: 60-66ч">FE 6ч</div>
+                                <div class="task-bar critical backend" style="left: 71.43%; width: 7.14%;" title="T8 BE: 60-66ч">BE 6ч</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- SAVE AS ПОТОК -->
+                <div class="gantt-group">
+                    <div class="group-header saveas">
+                        <span>🟣 SAVE AS + TEMPLATES</span>
+                        <span class="group-duration">48 часов (параллельно с критическим путем)</span>
+                    </div>
+                    
+                    <!-- T1 -->
+                    <div class="gantt-row">
+                        <div class="task-info">
+                            <div class="task-id">T1</div>
+                            <div class="task-name">Universal "Save As" Dialog</div>
+                            <div class="task-meta">Frontend 24ч + Backend 12ч (параллельно)</div>
+                            <div class="task-dependency">Независимая</div>
+                        </div>
+                        <div class="timeline-container">
+                            <div class="timeline-bg">
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                            </div>
+                            <div class="task-bars">
+                                <div class="task-bar frontend" style="left: 0%; width: 28.57%;" title="T1 FE: 0-24ч">Frontend 24ч</div>
+                                <div class="task-bar backend" style="left: 0%; width: 14.29%;" title="T1 BE: 0-12ч">Backend 12ч</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- T2 -->
+                    <div class="gantt-row">
+                        <div class="task-info">
+                            <div class="task-id">T2</div>
+                            <div class="task-name">Template-based export</div>
+                            <div class="task-meta">Backend 24ч + Frontend 6ч (параллельно)</div>
+                            <div class="task-dependency">Зависит от: T1 (интеграция)</div>
+                        </div>
+                        <div class="timeline-container">
+                            <div class="timeline-bg">
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                            </div>
+                            <div class="task-bars">
+                                <div class="task-bar backend" style="left: 28.57%; width: 28.57%;" title="T2 BE: 24-48ч">Backend 24ч</div>
+                                <div class="task-bar frontend" style="left: 28.57%; width: 7.14%;" title="T2 FE: 24-30ч">FE 6ч</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ОСТАЛЬНЫЕ ЗАДАЧИ -->
+                <div class="gantt-group">
+                    <div class="group-header other">
+                        <span>🔵 ОСТАЛЬНЫЕ ЗАДАЧИ</span>
+                        <span class="group-duration">Параллельно основным потокам</span>
+                    </div>
+                    
+                    <!-- T3 -->
+                    <div class="gantt-row">
+                        <div class="task-info">
+                            <div class="task-id">T3</div>
+                            <div class="task-name">Site Plan scale options</div>
+                            <div class="task-meta">Frontend 12ч + Backend 12ч (параллельно)</div>
+                            <div class="task-dependency">Независимая</div>
+                        </div>
+                        <div class="timeline-container">
+                            <div class="timeline-bg">
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                            </div>
+                            <div class="task-bars">
+                                <div class="task-bar frontend" style="left: 0%; width: 14.29%;" title="T3 FE: 0-12ч">Frontend 12ч</div>
+                                <div class="task-bar backend" style="left: 0%; width: 14.29%;" title="T3 BE: 0-12ч">Backend 12ч</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- T9 -->
+                    <div class="gantt-row">
+                        <div class="task-info">
+                            <div class="task-id">T9</div>
+                            <div class="task-name">Dynamic legend generation</div>
+                            <div class="task-meta">Backend 6ч</div>
+                            <div class="task-dependency">Независимая</div>
+                        </div>
+                        <div class="timeline-container">
+                            <div class="timeline-bg">
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                            </div>
+                            <div class="task-bars">
+                                <div class="task-bar backend" style="left: 0%; width: 7.14%;" title="T9: 0-6ч">6ч</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- T10 -->
+                    <div class="gantt-row">
+                        <div class="task-info">
+                            <div class="task-id">T10</div>
+                            <div class="task-name">Interactive PDF & SketchUp export</div>
+                            <div class="task-meta">Backend 24ч • Низкий приоритет</div>
+                            <div class="task-dependency">Независимая</div>
+                        </div>
+                        <div class="timeline-container">
+                            <div class="timeline-bg">
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                            </div>
+                            <div class="task-bars">
+                                <div class="task-bar backend" style="left: 57.14%; width: 28.57%; opacity: 0.7;" title="T10: 48-72ч (опционально)">24ч (опционально)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- T11 -->
+                    <div class="gantt-row">
+                        <div class="task-info">
+                            <div class="task-id">T11</div>
+                            <div class="task-name">Site Plan AI Q&A integration</div>
+                            <div class="task-meta">Backend 6ч • ⚠️ ЗАБЛОКИРОВАНА</div>
+                            <div class="task-dependency">Нет qless данных для IQs</div>
+                        </div>
+                        <div class="timeline-container">
+                            <div class="timeline-bg">
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                                <div class="timeline-segment"></div>
+                            </div>
+                            <div class="task-bars">
+                                <div class="task-bar blocked" style="left: 92.86%; width: 7.14%;" title="T11: Заблокирована">⚠️</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="legend">
+                <div class="legend-title">Легенда</div>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="legend-box" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);"></div>
+                        <span>Критический путь (66ч) — определяет срок проекта</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                        <span>Frontend разработка</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+                        <span>Backend разработка</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box" style="background: #95a5a6; opacity: 0.5;"></div>
+                        <span>Заблокированная задача</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="next-steps">
+                <div class="next-steps-title">✅ Ключевые рекомендации</div>
+                <div class="steps-list">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-text"><strong>Немедленно стартовать T4</strong> — это начало критического пути, который определяет минимальный срок проекта (66ч)</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-text"><strong>Параллельно запустить T1 и T3</strong> — они независимы и могут выполняться одновременно с критическим путем</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-text"><strong>Проверить лицензию ODA File Converter</strong> для T4 до начала разработки (потенциальный риск)</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-text"><strong>Команда: 2 FE + 2 BE</strong> — Backend Dev 1 на критический путь, остальные на параллельные задачи</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

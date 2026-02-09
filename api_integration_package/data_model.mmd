@@ -1,0 +1,63 @@
+erDiagram
+    PageConditionsState ||--o{ TakeoffZone : contains
+    TakeoffZone ||--o{ Condition : "measured in"
+    Condition ||--o{ TakeoffItem : "instances of"
+    TakeoffItem ||--o{ QuantityValue : "measured as"
+    Condition ||--o{ QuantityDto : "defines"
+    TakeoffZone ||--|| NormalizedBoundingBoxModel : "bounded by"
+    TakeoffItem ||--o{ Point : "defined by"
+
+    PageConditionsState {
+        array takeoffZones "All zones on page"
+    }
+
+    TakeoffZone {
+        uuid id "Unique identifier"
+        double scale "Scale factor (e.g. 100 for 1:100)"
+        string name "Zone name"
+        int dpi "Drawing resolution"
+        NormalizedBoundingBoxModel boundingBox "Zone boundaries"
+    }
+
+    Condition {
+        uuid id "Unique identifier"
+        string name "Display name"
+        string type "Count/Linear/Area"
+        string shape "Window/Door/Column/etc"
+        string category "Grouping"
+        array quantities "Measurement definitions"
+    }
+
+    TakeoffItem {
+        uuid id "Unique identifier"
+        uuid conditionId "Parent condition"
+        uuid takeoffZoneId "Parent zone"
+        uuid parentTakeoffItemId "Parent item (for attachments)"
+        array points "Coordinate geometry"
+        double angle "Rotation angle"
+        array quantityValues "Measured values"
+    }
+
+    QuantityDto {
+        string name "Quantity name"
+        string unitOfMeasure "Unit (ea, m², m)"
+        bool excludeAttachments "Exclude child items"
+    }
+
+    QuantityValue {
+        string name "Quantity name"
+        string unitOfMeasure "Unit"
+        double value "Measured value"
+    }
+
+    NormalizedBoundingBoxModel {
+        double left "Left coordinate"
+        double top "Top coordinate"
+        double right "Right coordinate"
+        double bottom "Bottom coordinate"
+    }
+
+    Point {
+        double x "X coordinate"
+        double y "Y coordinate"
+    }

@@ -1,0 +1,442 @@
+openapi: 3.0.1
+info:
+  title: DestiniEstimator2TakeoffIntegrationAPI
+  version: '1.0'
+  description: |
+    Integration API for Takeoff and Estimator services in AEC domain.
+    Enables bidirectional communication for construction measurement and cost estimation.
+
+paths:
+  /api/Conditions/PostConditionsChange:
+    post:
+      tags:
+        - Conditions
+      operationId: PostConditionsChange
+      summary: Webhook endpoint to notify about changes in Takeoff measurements
+      description: |
+        Called by Takeoff service when user creates, updates, or deletes conditions/items.
+        Estimator receives this webhook and then fetches full state from Takeoff.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConditionsChange'
+      responses:
+        '200':
+          description: Change notification received successfully
+
+  /api/Conditions/GetAllConditionsState:
+    get:
+      tags:
+        - Conditions
+      operationId: GetAllConditionsState
+      summary: Get current state of all conditions for a document page
+      description: |
+        Returns complete hierarchy: TakeoffZones → Conditions → TakeoffItems with measurements.
+        Called by Estimator after receiving webhook to get full current state.
+      parameters:
+        - name: documentId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Unique identifier of the construction document/drawing
+        - name: pageNumber
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+          description: Page number within the document (1-indexed)
+      responses:
+        '200':
+          description: Current state retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageConditionsState'
+
+components:
+  schemas:
+    ConditionDto:
+      type: object
+      additionalProperties: false
+      description: Represents a type of construction element (Window, Door, Wall) with measurement rules
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the condition
+        name:
+          type: string
+          nullable: true
+          description: Display name (e.g., "Standard Window 1200x1500")
+        type:
+          type: string
+          nullable: true
+          description: Measurement type - Count, Linear, Area
+        description:
+          type: string
+          nullable: true
+          description: Additional notes about this condition
+        layer:
+          type: string
+          nullable: true
+          description: Drawing layer name
+        color:
+          type: string
+          nullable: true
+          description: Display color for UI
+        lineStyle:
+          type: string
+          nullable: true
+          description: Line style for rendering
+        fillPattern:
+          type: string
+          nullable: true
+          description: Fill pattern for area elements
+        isAttachment:
+          type: boolean
+          description: Whether this is an attachment to another element
+        category:
+          type: string
+          nullable: true
+          description: Category grouping (e.g., "Doors", "Windows")
+        shape:
+          type: string
+          nullable: true
+          description: Geometric shape - Window, Column, Square, etc.
+        quantities:
+          type: array
+          nullable: true
+          description: Measurement quantities defined for this condition
+          items:
+            $ref: '#/components/schemas/QuantityDto'
+        properties:
+          type: array
+          nullable: true
+          description: Standard properties (key-value pairs)
+          items:
+            $ref: '#/components/schemas/NameValuePair'
+        customAttributes:
+          type: array
+          nullable: true
+          description: User-defined custom attributes
+          items:
+            $ref: '#/components/schemas/NameValuePair'
+
+    ConditionState:
+      type: object
+      additionalProperties: false
+      description: Complete state of a condition with all its measured items
+      properties:
+        condition:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/ConditionDto'
+        takeoffItems:
+          type: array
+          nullable: true
+          description: All measurement instances for this condition
+          items:
+            $ref: '#/components/schemas/TakeoffItemDto'
+
+    ConditionsAction:
+      type: object
+      additionalProperties: false
+      description: Represents a single create/update/delete action in the change notification
+      properties:
+        orderNumber:
+          type: integer
+          format: int32
+          description: Sequence order for processing multiple actions
+        actionName:
+          type: string
+          nullable: true
+          description: Type of action - Create, Update, Delete
+        entityType:
+          type: string
+          nullable: true
+          description: Type of entity affected - TakeoffZone, TakeoffItem, Condition
+        condition:
+          nullable: true
+          description: Condition data for Create/Update actions
+          allOf:
+            - $ref: '#/components/schemas/ConditionDto'
+        takeoffZone:
+          nullable: true
+          description: TakeoffZone data for Create/Update actions
+          allOf:
+            - $ref: '#/components/schemas/TakeoffZoneDto'
+        takeoffItem:
+          nullable: true
+          description: TakeoffItem data for Create/Update actions
+          allOf:
+            - $ref: '#/components/schemas/TakeoffItemDto'
+        deleteCondition:
+          nullable: true
+          description: Condition identifier for Delete actions
+          allOf:
+            - $ref: '#/components/schemas/DeleteConditionAction'
+        deleteTakeoffItem:
+          nullable: true
+          description: TakeoffItem identifier for Delete actions
+          allOf:
+            - $ref: '#/components/schemas/DeleteTakeoffItemAction'
+        deleteTakeoffZone:
+          nullable: true
+          description: TakeoffZone identifier for Delete actions
+          allOf:
+            - $ref: '#/components/schemas/DeleteTakeoffZoneAction'
+
+    ConditionsChange:
+      type: object
+      additionalProperties: false
+      description: Webhook payload containing changes made in Takeoff
+      properties:
+        documentId:
+          type: string
+          format: uuid
+          description: Document where changes occurred
+        pageNumber:
+          type: integer
+          format: int32
+          description: Page number where changes occurred
+        actions:
+          type: array
+          nullable: true
+          description: List of actions performed (ordered by orderNumber)
+          items:
+            $ref: '#/components/schemas/ConditionsAction'
+
+    DeleteConditionAction:
+      type: object
+      additionalProperties: false
+      description: Identifier for condition deletion
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID of condition to delete
+
+    DeleteTakeoffItemAction:
+      type: object
+      additionalProperties: false
+      description: Identifier for takeoff item deletion
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID of takeoff item to delete
+
+    DeleteTakeoffZoneAction:
+      type: object
+      additionalProperties: false
+      description: Identifier for takeoff zone deletion
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID of takeoff zone to delete
+
+    NameValuePair:
+      type: object
+      additionalProperties: false
+      description: Generic key-value pair for properties and attributes
+      properties:
+        name:
+          type: string
+          nullable: true
+          description: Property/attribute name
+        value:
+          type: string
+          nullable: true
+          description: Property/attribute value
+
+    NormalizedBoundingBoxModel:
+      type: object
+      additionalProperties: false
+      description: Square area with coordinates in document that contain some object
+      required:
+        - bottom
+        - left
+        - right
+        - top
+      properties:
+        left:
+          type: number
+          format: double
+          description: Left bound coordinate
+        top:
+          type: number
+          format: double
+          description: Top bound coordinate
+        right:
+          type: number
+          format: double
+          description: Right bound coordinate
+        bottom:
+          type: number
+          format: double
+          description: Bottom bound coordinate
+        width:
+          type: number
+          format: double
+          readOnly: true
+          description: Calculated width of the square
+        height:
+          type: number
+          format: double
+          readOnly: true
+          description: Calculated height of the square
+
+    PageConditionsState:
+      type: object
+      additionalProperties: false
+      description: Complete state of all takeoff zones and conditions for a document page
+      properties:
+        takeoffZones:
+          type: array
+          nullable: true
+          description: All takeoff zones on this page with their conditions
+          items:
+            $ref: '#/components/schemas/TakeoffZoneState'
+
+    Point:
+      type: object
+      additionalProperties: false
+      description: 2D coordinate point on the drawing
+      properties:
+        x:
+          type: number
+          format: double
+          description: X coordinate (horizontal position)
+        y:
+          type: number
+          format: double
+          description: Y coordinate (vertical position)
+
+    QuantityDto:
+      type: object
+      additionalProperties: false
+      description: Definition of a measurement quantity for a condition
+      properties:
+        name:
+          type: string
+          nullable: true
+          description: Quantity name (e.g., "Count", "Area", "Length")
+        unitOfMeasure:
+          type: string
+          nullable: true
+          description: Unit of measurement (e.g., "ea", "m²", "m")
+        excludeAttachments:
+          type: boolean
+          description: Whether to exclude attached items from this quantity
+
+    QuantityValue:
+      type: object
+      additionalProperties: false
+      description: Actual measured value for a quantity
+      properties:
+        name:
+          type: string
+          nullable: true
+          description: Quantity name matching QuantityDto
+        unitOfMeasure:
+          type: string
+          nullable: true
+          description: Unit of measurement
+        value:
+          type: number
+          format: double
+          description: Measured numeric value
+
+    TakeoffItemDto:
+      type: object
+      additionalProperties: false
+      description: Specific measurement instance with coordinates on the drawing
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of this takeoff item
+        conditionId:
+          type: string
+          format: uuid
+          description: Parent condition ID
+        takeoffZoneId:
+          type: string
+          format: uuid
+          description: Parent takeoff zone ID
+        parentTakeoffItemId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Parent item ID (for attachments)
+        points:
+          type: array
+          nullable: true
+          description: Coordinate points defining the item geometry
+          items:
+            $ref: '#/components/schemas/Point'
+        angle:
+          type: number
+          format: double
+          nullable: true
+          description: Rotation angle in degrees
+        itemName:
+          type: string
+          nullable: true
+          description: Custom name for this specific item
+        quantityValues:
+          type: array
+          nullable: true
+          description: Measured values for all quantities
+          items:
+            $ref: '#/components/schemas/QuantityValue'
+
+    TakeoffZoneDto:
+      type: object
+      additionalProperties: false
+      description: Scaled region on the drawing with DPI and scale factor (e.g., 1:100)
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the zone
+        scale:
+          type: number
+          format: double
+          description: Scale factor (e.g., 100 for 1:100 scale)
+        name:
+          type: string
+          nullable: true
+          description: Zone name (e.g., "Floor Plan - Scale 1:100")
+        boundingBox:
+          nullable: true
+          description: Rectangular area defining the zone boundaries
+          allOf:
+            - $ref: '#/components/schemas/NormalizedBoundingBoxModel'
+        dpi:
+          type: integer
+          format: int32
+          description: Dots per inch resolution of the drawing
+
+    TakeoffZoneState:
+      type: object
+      additionalProperties: false
+      description: Complete state of a zone with all its conditions
+      properties:
+        takeoffZone:
+          nullable: true
+          description: Zone metadata (scale, DPI, boundaries)
+          allOf:
+            - $ref: '#/components/schemas/TakeoffZoneDto'
+        conditions:
+          type: array
+          nullable: true
+          description: All conditions measured within this zone
+          items:
+            $ref: '#/components/schemas/ConditionState'

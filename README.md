@@ -1,11 +1,11 @@
-# Technologica Test Task
+# Technologika Test Task
 
 This repository contains solutions for two related tasks in the AEC (Architecture, Engineering, Construction) software domain.
 
 ## Repository Structure
 
 ```
-technologica-test-task/
+technologika-test-task/
 ├── feature_delivery_estimation/     # Task 1: Feature effort estimation
 └── api_integration_package/         # Task 2: Service integration demo
 ```

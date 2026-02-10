@@ -1,20 +1,20 @@
-# Takeoff ↔ Estimator Integration Package
+# Интеграция Takeoff ↔ Estimator
 
-## Overview
+## Обзор
 
-This package provides a bidirectional integration between two AEC (Architecture, Engineering, Construction) services:
+Этот пакет обеспечивает двунаправленную интеграцию между двумя сервисами AEC (Архитектура, Инженерия, Строительство):
 
-**Takeoff Service** is a computer vision-based measurement system that enables users to take precise measurements from construction drawings. Users can mark windows, doors, walls, and other construction elements on PDF/CAD drawings, and the system automatically calculates quantities (counts, areas, linear measurements) based on the drawing scale.
+**Сервис Takeoff** — это система измерений на основе компьютерного зрения, которая позволяет пользователям выполнять точные измерения на строительных чертежах. Пользователи могут отмечать окна, двери, стены и другие строительные элементы на PDF/CAD чертежах, а система автоматически рассчитывает количества (подсчет, площади, линейные размеры) на основе масштаба чертежа.
 
-**Estimator Service** is a cost estimation system that receives measurement data from Takeoff and calculates project costs by applying pricing rules and material rates to the measured quantities.
+**Сервис Estimator** — это система оценки стоимости, которая получает данные измерений от Takeoff и рассчитывает стоимость проекта, применяя правила ценообразования и ставки материалов к измеренным количествам.
 
-The integration flow is **webhook-based with pull architecture**: when users modify measurements in Takeoff, it sends a lightweight notification to Estimator, which then requests the complete current state and recalculates the cost estimate. This approach ensures Estimator always works with the latest data while minimizing payload sizes in webhooks.
+Поток интеграции основан на **webhook-архитектуре с механизмом pull**: когда пользователи изменяют измерения в Takeoff, он отправляет облегченное уведомление в Estimator, который затем запрашивает полное текущее состояние и пересчитывает смету стоимости. Этот подход гарантирует, что Estimator всегда работает с актуальными данными, при этом минимизируя размер полезной нагрузки в webhook.
 
-## Architecture
+## Архитектура
 
-### Integration Flow
+### Поток интеграции
 
-The following sequence diagram shows the complete integration flow:
+Следующая диаграмма последовательности показывает полный поток интеграции:
 
 ```mermaid
 sequenceDiagram
@@ -44,15 +44,15 @@ sequenceDiagram
     Note over Estimator: Result available for UI/reporting
 ```
 
-**Key Points:**
-1. **User Action**: User modifies measurements in Takeoff UI (add window, update wall, delete door, etc.)
-2. **Webhook Trigger**: Takeoff sends POST request with change details (what changed, but not full state)
-3. **State Synchronization**: Estimator immediately requests full current state from Takeoff
-4. **Cost Calculation**: Estimator applies pricing rules to the updated measurements and logs results
+**Ключевые моменты:**
+1. **Действие пользователя**: Пользователь изменяет измерения в Takeoff UI (добавляет окно, обновляет стену, удаляет дверь и т.д.)
+2. **Триггер webhook**: Takeoff отправляет POST-запрос с деталями изменения (что изменилось, но не полное состояние)
+3. **Синхронизация состояния**: Estimator немедленно запрашивает полное текущее состояние у Takeoff
+4. **Расчет стоимости**: Estimator применяет правила ценообразования к обновленным измерениям и записывает результаты в лог
 
-### Data Model Hierarchy
+### Иерархия модели данных
 
-The data model follows a hierarchical structure from drawing regions down to individual measurements:
+Модель данных следует иерархической структуре от областей чертежа до отдельных измерений:
 
 ```mermaid
 erDiagram
@@ -120,56 +120,56 @@ erDiagram
     }
 ```
 
-**Example Hierarchy:**
-- **PageConditionsState**: Floor plan drawing page 1
+**Пример иерархии:**
+- **PageConditionsState**: Чертеж плана этажа, страница 1
   - **TakeoffZone**: "Floor Plan - Scale 1:100" (DPI: 300, scale: 100)
     - **Condition**: "Standard Window 1200x1500" (Type: Count, Shape: Window)
-      - **TakeoffItem**: Window instance at coordinates (150.5, 200.3)
+      - **TakeoffItem**: Экземпляр окна в координатах (150.5, 200.3)
         - **QuantityValue**: Count = 1 ea
         - **QuantityValue**: Area = 1.8 m²
 
-## API Endpoints
+## Конечные точки API
 
-### Takeoff Service Implements
+### Реализовано в сервисе Takeoff
 
 #### `GET /api/Conditions/GetAllConditionsState`
 
-Returns the complete current state of all measurements for a specific document page.
+Возвращает полное текущее состояние всех измерений для конкретной страницы документа.
 
-**Parameters:**
-- `documentId` (UUID, required): Unique identifier of the construction document/drawing
-- `pageNumber` (integer, required): Page number within the document (1-indexed)
+**Параметры:**
+- `documentId` (UUID, обязательный): Уникальный идентификатор строительного документа/чертежа
+- `pageNumber` (integer, обязательный): Номер страницы в документе (начиная с 1)
 
-**Returns:** `PageConditionsState`
-- Complete hierarchy of TakeoffZones → Conditions → TakeoffItems
-- All measurement values (counts, areas, linear dimensions)
-- Coordinate geometry for all items
+**Возвращает:** `PageConditionsState`
+- Полная иерархия TakeoffZones → Conditions → TakeoffItems
+- Все значения измерений (подсчеты, площади, линейные размеры)
+- Координатная геометрия для всех элементов
 
-**Usage:** Called by Estimator after receiving a webhook notification to get the full current state.
+**Использование:** Вызывается Estimator после получения уведомления webhook для получения полного текущего состояния.
 
-**Example:**
+**Пример:**
 ```
 GET /api/Conditions/GetAllConditionsState?documentId=550e8400-e29b-41d4-a716-446655440000&pageNumber=1
 ```
 
 ---
 
-### Estimator Service Implements
+### Реализовано в сервисе Estimator
 
 #### `POST /api/Conditions/PostConditionsChange`
 
-Webhook endpoint to receive notifications about changes in Takeoff measurements.
+Конечная точка webhook для получения уведомлений об изменениях в измерениях Takeoff.
 
-**Request Body:** `ConditionsChange`
-- `documentId` (UUID): Document where changes occurred
-- `pageNumber` (integer): Page number where changes occurred
-- `actions` (array): List of Create/Update/Delete actions
+**Тело запроса:** `ConditionsChange`
+- `documentId` (UUID): Документ, в котором произошли изменения
+- `pageNumber` (integer): Номер страницы, на которой произошли изменения
+- `actions` (array): Список действий Create/Update/Delete
 
-**Response:** `200 OK` when notification is successfully received
+**Ответ:** `200 OK` при успешном получении уведомления
 
-**Usage:** Called by Takeoff whenever user creates, updates, or deletes conditions or takeoff items.
+**Использование:** Вызывается Takeoff всякий раз, когда пользователь создает, обновляет или удаляет условия или элементы takeoff.
 
-**Example:**
+**Пример:**
 ```json
 POST /api/Conditions/PostConditionsChange
 Content-Type: application/json
@@ -188,9 +188,9 @@ Content-Type: application/json
 }
 ```
 
-## Quick Start
+## Быстрый старт
 
-### Option A: Docker (Рекомендуется)
+### Вариант A: Docker (Рекомендуется)
 
 **Требования:** Docker и Docker Compose
 
@@ -208,7 +208,7 @@ docker-compose up
 docker-compose down
 ```
 
-### Option B: Локальный запуск (Python)
+### Вариант B: Локальный запуск (Python)
 
 **Требования:** Python 3.9+
 
@@ -244,9 +244,9 @@ curl -X POST http://localhost:8001/api/Conditions/PostConditionsChange \
   -d @examples/sample_webhook.json
 ```
 
-## Expected Console Output
+## Ожидаемый вывод в консоль
 
-**Estimator Service Terminal:**
+**Терминал сервиса Estimator:**
 ```
 ============================================================
 📥 WEBHOOK RECEIVED: PostConditionsChange
@@ -277,67 +277,67 @@ curl -X POST http://localhost:8001/api/Conditions/PostConditionsChange \
 ============================================================
 ```
 
-**Takeoff Service Terminal:**
+**Терминал сервиса Takeoff:**
 ```
 📤 GET /api/Conditions/GetAllConditionsState - documentId=550e8400-e29b-41d4-a716-446655440000, pageNumber=1
 ✅ Returning state: 1 zone(s), 3 condition(s), 5 item(s)
 INFO:     127.0.0.1:xxxxx - "GET /api/Conditions/GetAllConditionsState?documentId=550e8400-e29b-41d4-a716-446655440000&pageNumber=1 HTTP/1.1" 200 OK
 ```
 
-**What happens:**
-1. Webhook sent to Estimator
-2. Estimator fetches state from Takeoff
-3. Cost calculated: 2 Windows ($400) + 1 Door ($300) + 2 Walls ($1,395) = **$2,095**
+**Что происходит:**
+1. Webhook отправлен в Estimator
+2. Estimator запрашивает состояние у Takeoff
+3. Стоимость рассчитана: 2 окна ($400) + 1 дверь ($300) + 2 стены ($1,395) = **$2,095**
 
-## Project Structure
+## Структура проекта
 
 ```
 api_integration_package/
-├── README.md                      # This file
-├── openapi_corrected.yaml         # Corrected OpenAPI specification
-├── integration_flow.mmd           # Sequence diagram (Mermaid)
-├── data_model.mmd                 # Data model diagram (Mermaid)
+├── README.md                      # Этот файл
+├── openapi_corrected.yaml         # Исправленная OpenAPI спецификация
+├── integration_flow.mmd           # Диаграмма последовательности (Mermaid)
+├── data_model.mmd                 # Диаграмма модели данных (Mermaid)
 ├── examples/
-│   └── sample_webhook.json        # Example webhook payload
+│   └── sample_webhook.json        # Пример полезной нагрузки webhook
 ├── takeoff_service/
-│   ├── main.py                    # FastAPI app (port 8000)
-│   ├── models.py                  # Pydantic models
-│   ├── mock_data.py               # Mock data
+│   ├── main.py                    # FastAPI приложение (порт 8000)
+│   ├── models.py                  # Pydantic модели
+│   ├── mock_data.py               # Тестовые данные
 │   └── requirements.txt
 └── estimator_service/
-    ├── main.py                    # FastAPI app (port 8001)
-    ├── models.py                  # Pydantic models
-    ├── pricing.py                 # Cost calculation
+    ├── main.py                    # FastAPI приложение (порт 8001)
+    ├── models.py                  # Pydantic модели
+    ├── pricing.py                 # Расчет стоимости
     └── requirements.txt
 ```
 
-## Technical Notes
+## Технические примечания
 
-- **In-Memory Data**: Hardcoded mock data (no database)
-- **Happy Path Only**: No authentication or error handling
-- **Swagger UI**: Auto-generated at `/docs` endpoints
-- **Logging**: Console shows complete flow
+- **Данные в памяти**: Жестко заданные тестовые данные (без базы данных)
+- **Только успешный сценарий**: Без аутентификации и обработки ошибок
+- **Swagger UI**: Автоматически генерируется на конечных точках `/docs`
+- **Логирование**: Консоль показывает полный поток
 
-## Data Sources & Mock Data
+## Источники данных и тестовые данные
 
-This demo package uses realistic mock data for demonstration purposes:
+Этот демонстрационный пакет использует реалистичные тестовые данные для демонстрации:
 
-**Data Structure (from OpenAPI Specification):**
-- All schemas, field names, and data types are derived from the provided OpenAPI specification
-- Models include: PageConditionsState, TakeoffZone, Condition, TakeoffItem, QuantityValue
+**Структура данных (из OpenAPI спецификации):**
+- Все схемы, имена полей и типы данных получены из предоставленной OpenAPI спецификации
+- Модели включают: PageConditionsState, TakeoffZone, Condition, TakeoffItem, QuantityValue
 
-**Mock Values (generated for demo):**
-- Concrete data values (coordinates, measurements, names) were generated to represent realistic AEC scenarios
-- Example: "First Floor Plan" zone, "Standard Window 1200x1500", coordinates (150.5, 200.3)
-- Mock data is defined in [takeoff_service/mock_data.py](takeoff_service/mock_data.py)
+**Тестовые значения (сгенерированы для демонстрации):**
+- Конкретные значения данных (координаты, измерения, имена) были сгенерированы для представления реалистичных сценариев AEC
+- Пример: зона "First Floor Plan", "Standard Window 1200x1500", координаты (150.5, 200.3)
+- Тестовые данные определены в [takeoff_service/mock_data.py](takeoff_service/mock_data.py)
 
-**Pricing Rules (defined for demo):**
-- Unit prices were created for demonstration: Windows ($200/EA), Doors ($300/EA), Walls ($50/SQ.M)
-- Pricing logic is implemented in [estimator_service/pricing.py](estimator_service/pricing.py)
-- Final calculation ($2,095) is computed automatically by the cost estimation engine
+**Правила ценообразования (определены для демонстрации):**
+- Цены за единицу были созданы для демонстрации: Окна ($200/EA), Двери ($300/EA), Стены ($50/SQ.M)
+- Логика ценообразования реализована в [estimator_service/pricing.py](estimator_service/pricing.py)
+- Итоговый расчет ($2,095) вычисляется автоматически механизмом оценки стоимости
 
-## Pricing Rules
+## Правила ценообразования
 
-- Windows: $200 per unit
-- Doors: $300 per unit
-- Walls: $50 per square meter
+- Окна: $200 за единицу
+- Двери: $300 за единицу
+- Стены: $50 за квадратный метр

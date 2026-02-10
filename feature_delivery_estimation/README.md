@@ -1,86 +1,86 @@
-# Feature Delivery Estimation
+# Оценка поставки фич
 
-## Overview
+## Обзор
 
-This project contains effort estimation for the "Output Formatting Features" initiative - a set of 11 features for enhancing document export and formatting capabilities in an AEC (Architecture, Engineering, Construction) application.
+Этот проект содержит оценку трудозатрат для инициативы "Функции форматирования вывода" - набора из 11 функций для улучшения возможностей экспорта и форматирования документов в AEC (Архитектура, Инженерия, Строительство) приложении.
 
-## Executive Summary
+## Краткая сводка
 
-| Metric | Value |
-|--------|-------|
-| **Total Effort** | 198 hours |
-| **Critical Path** | 66 hours |
-| **Timeline (4 devs)** | ~11 business days |
-| **Team Size** | 2 Frontend + 2 Backend |
+| Метрика | Значение |
+|---------|----------|
+| **Общая трудоемкость** | 198 часов |
+| **Критический путь** | 66 часов |
+| **Сроки (4 разраб.)** | ~11 рабочих дней |
+| **Размер команды** | 2 Frontend + 2 Backend |
 
-## Files
+## Файлы
 
 ### [summary_brief.md](summary_brief.md)
-Concise executive summary with:
-- Critical path analysis (66h CAD/GIS export chain)
-- Complete task breakdown (11 tasks)
-- Development strategy with parallel workstreams
-- Actionable recommendations
+Краткая исполнительная сводка с:
+- Анализ критического пути (66ч цепочка CAD/GIS экспорта)
+- Полная разбивка задач (11 задач)
+- Стратегия разработки с параллельными потоками работ
+- Практические рекомендации
 
 ### [estimate_final.xlsx](estimate_final.xlsx)
-Detailed estimation spreadsheet including:
-- Task decomposition with effort sizing (Small=6h, Medium=12h, Large=24h)
-- Frontend/Backend split
-- Dependencies and constraints
-- Team allocation recommendations
+Детальная таблица оценки включающая:
+- Декомпозиция задач с размерами трудозатрат (Small=6ч, Medium=12ч, Large=24ч)
+- Разделение Frontend/Backend
+- Зависимости и ограничения
+- Рекомендации по распределению команды
 
 ### [gantt_final.html](gantt_final.html)
-Interactive Gantt chart visualization:
-- Timeline with parallel workstreams
-- Critical path highlighting (T4→T5→T6→T7→T8)
-- Resource allocation across 4 developers
-- Dependency relationships
+Интерактивная визуализация Gantt диаграммы:
+- Timeline с параллельными потоками работ
+- Выделение критического пути (T4→T5→T6→T7→T8)
+- Распределение ресурсов между 4 разработчиками
+- Связи зависимостей
 
-**To view:** Open in any web browser (double-click the file)
+**Для просмотра:** Откройте в любом веб-браузере (двойной клик по файлу)
 
 ### [task.md](task.md)
-Original task specification with:
-- Complete feature requirements (T1-T11)
-- Technical constraints
-- Business context
+Исходная спецификация задачи с:
+- Полные требования к функциям (T1-T11)
+- Технические ограничения
+- Бизнес-контекст
 
-## Key Insights
+## Ключевые выводы
 
-**Critical Path (66 hours):**
+**Критический путь (66 часов):**
 ```
-T4 (6h) → T5 (12h) → T6 (24h) → T7 (18h) → T8 (6h)
+T4 (6ч) → T5 (12ч) → T6 (24ч) → T7 (18ч) → T8 (6ч)
 ```
-This CAD/GIS export chain determines the minimum project duration and must start immediately.
+Эта цепочка CAD/GIS экспорта определяет минимальную продолжительность проекта и должна быть запущена немедленно.
 
-**Parallel Workstreams:**
-- Stream 1: CAD/GIS Export (Backend Dev 1) - critical path
-- Stream 2: Save As Dialog + Templates (Backend Dev 2 + Frontend Dev 1)
-- Stream 3: Site Plan + Misc features (Frontend Dev 2)
+**Параллельные потоки работ:**
+- Поток 1: CAD/GIS Экспорт (Backend Dev 1) - критический путь
+- Поток 2: Save As Dialog + Шаблоны (Backend Dev 2 + Frontend Dev 1)
+- Поток 3: Site Plan + Прочие функции (Frontend Dev 2)
 
-**Blocked Tasks:**
-- T11 (Site Plan AI Q&A) - missing required data, excluded from current sprint
+**Заблокированные задачи:**
+- T11 (Site Plan AI Q&A) - отсутствуют необходимые данные, исключена из текущего спринта
 
-## Methodology
+## Методология
 
-**Estimation Approach:**
-- Three-point sizing: Small (6h), Medium (12h), Large (24h)
-- Frontend/Backend effort split based on technical analysis
-- Dependencies mapped using critical path method (CPM)
-- Parallelization optimized for 4-person team
+**Подход к оценке:**
+- Трехточечное определение размера: Small (6ч), Medium (12ч), Large (24ч)
+- Разделение усилий Frontend/Backend на основе технического анализа
+- Зависимости отображены с использованием метода критического пути (CPM)
+- Распараллеливание оптимизировано для команды из 4 человек
 
-**Assumptions:**
-- Team works 8-hour days
-- No major blockers or scope changes
-- Backend Dev 1 dedicated to critical path
-- Testing integrated into development estimates
+**Допущения:**
+- Команда работает 8-часовыми днями
+- Нет серьезных блокировок или изменений объема
+- Backend Dev 1 выделен для критического пути
+- Тестирование интегрировано в оценки разработки
 
-## Recommendations
+## Рекомендации
 
-1. **Start T4 (CAD export) immediately** - beginning of critical path
-2. **Parallel launch T1 (Save As dialog)** - high priority, blocks T2
-3. **Defer T10 (Interactive PDF/SketchUp)** - low priority, can be phase 2
-4. **Exclude T11** - blocked by missing data dependencies
+1. **Немедленно запустить T4 (CAD export)** - начало критического пути
+2. **Параллельно запустить T1 (Save As dialog)** - высокий приоритет, блокирует T2
+3. **Отложить T10 (Interactive PDF/SketchUp)** - низкий приоритет, может быть во второй фазе
+4. **Исключить T11** - заблокирована отсутствующими зависимостями данных
 
-## Next Steps
+## Следующие шаги
 
-See [summary_brief.md](summary_brief.md) for detailed action plan and team allocation strategy.
+Смотрите [summary_brief.md](summary_brief.md) для детального плана действий и стратегии распределения команды.
